@@ -1,258 +1,290 @@
-(function () {
-  "use strict";
+:root {
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --ink: #000000;
+  --muted: #000000;
+  --line: #000000;
+  --cell: #f4f4f4;
+  --filled: #000000;
+  --highlight: #f4d35e;
+}
 
-  const GRID_SIZE = 8;
-  const MEMORY_GRID_SIZE = 4;
-  const MEMORY_LOCATION_COUNT = MEMORY_GRID_SIZE * MEMORY_GRID_SIZE;
+* {
+  box-sizing: border-box;
+}
 
-  const app = {
-    stage: document.getElementById("task-stage"),
-    trialLabel: document.getElementById("trial-label")
-  };
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-  const trialState = {
-    trialIndex: 0,
-    totalTrials: 5,
-    currentGrid: [],
-    currentSequence: [],
-    recallSelections: [],
-    currentSymmetry: true,
-    hitCount: 0
-  };
+body {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #ffffff;
+}
 
-  function shuffle(items, random = Math.random) {
-    const result = [...items];
-    for (let i = result.length - 1; i > 0; i--) {
-      const j = Math.floor(random() * (i + 1));
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-    return result;
+.jspsych-display-element {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
+}
+
+.task-shell {
+  width: min(1000px, 100%);
+}
+
+.task-panel {
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 28px;
+}
+
+.task-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+h1, h2 {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+h1 {
+  font-size: clamp(32px, 4vw, 42px);
+}
+
+h2 {
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.trial-pill {
+  border: 2px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+}
+
+.stage {
+  min-height: 560px;
+  border: 2px solid var(--line);
+  background: #ffffff;
+  padding: 22px;
+}
+
+.centered-screen {
+  min-height: 480px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.task-copy-block {
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+.task-copy {
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 0 0 18px;
+  text-align: center;
+}
+
+.task-panel-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-header {
+  margin-bottom: 16px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stimulus-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.single-box {
+  border: 2px solid var(--line);
+  background: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.symmetry-grid,
+.memory-grid,
+.recall-grid {
+  display: grid;
+  gap: 3px;
+  background: var(--line);
+  padding: 3px;
+  width: fit-content;
+  border-radius: 0;
+}
+
+.symmetry-grid {
+  grid-template-columns: repeat(8, 26px);
+}
+
+.memory-grid {
+  grid-template-columns: repeat(4, 30px);
+}
+
+.recall-grid {
+  grid-template-columns: repeat(4, 30px);
+  margin: 0 auto 10px;
+}
+
+.symmetry-cell,
+.memory-cell,
+.recall-cell {
+  width: 26px;
+  height: 26px;
+  display: block;
+  border: 0;
+  background: var(--cell);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.memory-cell,
+.recall-cell {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.symmetry-cell.is-filled {
+  background: var(--filled);
+}
+
+.memory-cell.is-highlighted,
+.recall-cell.is-selected {
+  background: var(--highlight);
+}
+
+.choice-row,
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.choice-button,
+.action-button {
+  appearance: none;
+  border: 2px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 700;
+  padding: 12px 26px;
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.choice-button:hover,
+.action-button:hover,
+.recall-cell:hover {
+  background: #f7f7f7;
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meta-row {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.meta-badge {
+  border: 2px solid var(--line);
+  background: #ffffff;
+  color: var(--ink);
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.status-bar {
+  margin-top: 14px;
+  min-height: 20px;
+  font-size: 16px;
+  text-align: center;
+  color: var(--ink);
+}
+
+.recall-panel {
+  padding-top: 10px;
+}
+
+@media (max-width: 760px) {
+  body {
+    padding: 16px;
   }
 
-  function generateSymmetryGrid(symmetrical, random = Math.random) {
-    const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
-
-    for (let row = 0; row < GRID_SIZE; row++) {
-      for (let col = 0; col < GRID_SIZE / 2; col++) {
-        const filled = random() < 0.5;
-        grid[row][col] = filled;
-        grid[row][GRID_SIZE - 1 - col] = filled;
-      }
-    }
-
-    if (!symmetrical) {
-      const row = Math.floor(random() * GRID_SIZE);
-      const col = Math.floor(random() * (GRID_SIZE / 2));
-      grid[row][col] = !grid[row][col];
-    }
-
-    return grid;
+  .task-panel {
+    padding: 16px;
   }
 
-  function renderSymmetryGrid(grid) {
-    return `<div class="symmetry-grid" role="img" aria-label="Symmetry pattern">${Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, index) => {
-      const row = Math.floor(index / GRID_SIZE);
-      const col = index % GRID_SIZE;
-      const filled = grid[row][col];
-      return `<span class="symmetry-cell${filled ? " is-filled" : ""}"></span>`;
-    }).join("")}</div>`;
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  function generateMemorySequence(length, random = Math.random) {
-    const positions = shuffle(Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) => index), random);
-    return positions.slice(0, length);
+  .choice-row,
+  .button-row {
+    gap: 10px;
   }
-
-  function renderMemoryGrid(sequence) {
-    const cells = Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) =>
-      `<span class="memory-cell${sequence.includes(index) ? " is-highlighted" : ""}"></span>`
-    ).join("");
-
-    return `<div class="memory-grid" role="img" aria-label="Memory pattern">${cells}</div>`;
-  }
-
-  function renderRecallGrid(selected = []) {
-    const cells = Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) => {
-      const isSelected = selected.includes(index);
-      return `<button class="recall-cell${isSelected ? " is-selected" : ""}" data-index="${index}" aria-label="Select memory location ${index + 1}">${index + 1}</button>`;
-    }).join("");
-
-    return `<div class="recall-grid" role="grid" aria-label="Recall grid">${cells}</div>`;
-  }
-
-  function renderIntro() {
-    app.stage.innerHTML = `
-      <div class="centered-screen">
-        <div class="task-copy-block">
-          <h2>Symmetry Span</h2>
-          <p>In this task, you will judge whether a grid is symmetrical or asymmetrical, then study a brief memory pattern and recall the highlighted positions.</p>
-          <p>Work carefully and try to remember the positions in the order they were shown.</p>
-          <div class="button-row">
-            <button class="action-button" id="start-task">Begin</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.getElementById("start-task").addEventListener("click", () => {
-      beginTrial();
-    });
-  }
-
-  function beginTrial() {
-    trialState.trialIndex += 1;
-    trialState.currentSymmetry = Math.random() > 0.5;
-    const length = Math.min(7, Math.max(3, trialState.trialIndex + 2));
-    trialState.currentGrid = generateSymmetryGrid(trialState.currentSymmetry);
-    trialState.currentSequence = generateMemorySequence(length);
-    trialState.recallSelections = [];
-
-    app.trialLabel.textContent = `Trial ${trialState.trialIndex}`;
-    showSymmetryPrompt();
-  }
-
-  function showSymmetryPrompt() {
-    app.stage.innerHTML = `
-      <div class="task-panel-content">
-        <div class="section-header">Symmetry Judgment</div>
-        <div class="stimulus-wrapper">
-          <div class="single-box">
-            ${renderSymmetryGrid(trialState.currentGrid)}
-          </div>
-        </div>
-        <div class="choice-row">
-          <button class="choice-button" data-answer="true">Symmetrical</button>
-          <button class="choice-button" data-answer="false">Asymmetrical</button>
-        </div>
-      </div>
-    `;
-
-    app.stage.querySelectorAll(".choice-button").forEach((button) => {
-      button.addEventListener("click", () => {
-        trialState.currentSymmetry = button.dataset.answer === "true";
-        setTimeout(() => showMemoryPrompt(), 300);
-      });
-    });
-  }
-
-  function showMemoryPrompt() {
-    app.stage.innerHTML = `
-      <div class="task-panel-content">
-        <div class="section-header">Study</div>
-        <div class="stimulus-wrapper">
-          <div class="single-box">
-            ${renderMemoryGrid(trialState.currentSequence)}
-            <div class="meta-row">
-              <span class="meta-badge">Sequence length: ${trialState.currentSequence.length}</span>
-            </div>
-          </div>
-        </div>
-        <div class="status-bar">Remember the highlighted positions.</div>
-      </div>
-    `;
-
-    setTimeout(() => showRecallPrompt(), 1800);
-  }
-
-  function showRecallPrompt() {
-    app.stage.innerHTML = `
-      <div class="task-panel-content recall-panel">
-        <div class="section-header">Recall</div>
-        <p class="task-copy">Select the positions you saw in the memory grid. You must choose exactly ${trialState.currentSequence.length} locations.</p>
-        ${renderRecallGrid(trialState.recallSelections)}
-        <div class="button-row">
-          <button class="action-button" id="submit-recall" disabled>Submit</button>
-        </div>
-        <div class="status-bar" id="recall-status">Selected: 0 / ${trialState.currentSequence.length}</div>
-      </div>
-    `;
-
-    const recallStatus = document.getElementById("recall-status");
-    const submitButton = document.getElementById("submit-recall");
-
-    function updateRecallStatus() {
-      const count = trialState.recallSelections.length;
-      recallStatus.textContent = `Selected: ${count} / ${trialState.currentSequence.length}`;
-      submitButton.disabled = count !== trialState.currentSequence.length;
-    }
-
-    app.stage.querySelectorAll(".recall-cell").forEach((cell) => {
-      cell.addEventListener("click", () => {
-        const index = Number(cell.dataset.index);
-
-        if (trialState.recallSelections.includes(index)) {
-          trialState.recallSelections = trialState.recallSelections.filter((value) => value !== index);
-        } else if (trialState.recallSelections.length < trialState.currentSequence.length) {
-          trialState.recallSelections.push(index);
-        }
-
-        app.stage.querySelectorAll(".recall-cell").forEach((node) => {
-          const value = Number(node.dataset.index);
-          node.classList.toggle("is-selected", trialState.recallSelections.includes(value));
-        });
-
-        updateRecallStatus();
-      });
-    });
-
-    submitButton.addEventListener("click", () => {
-      if (trialState.recallSelections.length !== trialState.currentSequence.length) return;
-
-      const correct = trialState.currentSequence.filter((value) => trialState.recallSelections.includes(value)).length;
-      const exact =
-        trialState.currentSequence.length === trialState.recallSelections.length &&
-        trialState.currentSequence.every((value) => trialState.recallSelections.includes(value));
-
-      trialState.hitCount += exact ? 1 : 0;
-
-      app.stage.innerHTML = `
-        <div class="centered-screen">
-          <div class="task-copy-block">
-            <h2>Trial complete</h2>
-            <p>Correct remembered positions: ${correct} / ${trialState.currentSequence.length}. Exact sequence: ${exact ? "Yes" : "No"}.</p>
-            <div class="meta-row">
-              <span class="meta-badge">Exact sequence score: ${trialState.hitCount}</span>
-              <span class="meta-badge">Trial ${trialState.trialIndex}</span>
-            </div>
-            <div class="button-row">
-              <button class="action-button" id="next-trial">Next trial</button>
-            </div>
-          </div>
-        </div>
-      `;
-
-      document.getElementById("next-trial").addEventListener("click", () => {
-        if (trialState.trialIndex >= trialState.totalTrials) {
-          showComplete();
-        } else {
-          beginTrial();
-        }
-      });
-    });
-
-    updateRecallStatus();
-  }
-
-  function showComplete() {
-    app.stage.innerHTML = `
-      <div class="centered-screen">
-        <div class="task-copy-block">
-          <h2>Session complete</h2>
-          <p>Your exact-sequence score is ${trialState.hitCount} out of ${trialState.totalTrials}.</p>
-          <div class="button-row">
-            <button class="action-button" id="restart-task">Restart</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.getElementById("restart-task").addEventListener("click", () => {
-      trialState.trialIndex = 0;
-      trialState.hitCount = 0;
-      renderIntro();
-    });
-  }
-
-  renderIntro();
-})();
-
+}
