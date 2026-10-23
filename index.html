@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Symmetry Span</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Symmetry Span Demo</h1>
+
+      <section class="panel">
+        <div class="controls">
+          <button id="generate-symmetry">Generate symmetry grid</button>
+          <button id="generate-memory">Generate memory square</button>
+        </div>
+
+        <div class="grid-layout">
+          <div>
+            <h2>Symmetry Grid</h2>
+            <div id="symmetry-output"></div>
+          </div>
+
+          <div>
+            <h2>Memory Grid</h2>
+            <div id="memory-output"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Quick checks</h2>
+        <pre id="console-output">Loading…</pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
