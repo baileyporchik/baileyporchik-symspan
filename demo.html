@@ -3,35 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Symmetry Span Demo</title>
+    <title>Symmetry Span</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <main class="app">
-      <h1>Symmetry Span Demo</h1>
-
       <section class="panel">
-        <div class="controls">
-          <button id="generate-symmetry">Generate symmetry grid</button>
-          <button id="generate-memory">Generate memory square</button>
-        </div>
+        <h1>Symmetry Span</h1>
+        <p class="subtitle">Task display</p>
 
         <div class="grid-layout">
-          <div>
+          <div class="box">
             <h2>Symmetry Grid</h2>
             <div id="symmetry-output"></div>
           </div>
 
-          <div>
+          <div class="box">
             <h2>Memory Grid</h2>
             <div id="memory-output"></div>
           </div>
         </div>
-      </section>
 
-      <section class="panel">
-        <h2>Quick checks</h2>
-        <pre id="console-output">Loading…</pre>
+        <div class="meta">
+          <span class="badge" id="trial-label">Trial 1</span>
+          <span class="badge" id="category-label">Category: Loading</span>
+          <span class="badge" id="sequence-label">Sequence: 0</span>
+        </div>
+
+        <div id="status" class="status">Preparing stimulus…</div>
       </section>
     </main>
 

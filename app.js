@@ -1,4 +1,4 @@
-(function (root) {
+(function () {
   "use strict";
 
   const GRID_SIZE = 8;
@@ -6,203 +6,90 @@
   const MEMORY_LOCATION_COUNT = MEMORY_GRID_SIZE * MEMORY_GRID_SIZE;
 
   function shuffle(items, random = Math.random) {
-    const shuffled = [...items];
-    for (let i = shuffled.length - 1; i > 0; i--) {
+    const result = [...items];
+    for (let i = result.length - 1; i > 0; i--) {
       const j = Math.floor(random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      [result[i], result[j]] = [result[j], result[i]];
     }
-    return shuffled;
-  }
-
-  function validateSymmetryGrid(grid) {
-    if (!Array.isArray(grid) || grid.length !== GRID_SIZE ||
-        grid.some(row => !Array.isArray(row) || row.length !== GRID_SIZE ||
-          row.some(cell => typeof cell !== "boolean"))) {
-      throw new Error("A symmetry grid must be an 8 by 8 matrix of booleans.");
-    }
-    return true;
-  }
-
-  function isSymmetricalGrid(grid) {
-    validateSymmetryGrid(grid);
-    return grid.every(row => row.every((cell, column) =>
-      cell === row[GRID_SIZE - 1 - column]
-    ));
+    return result;
   }
 
   function generateSymmetryGrid(symmetrical, random = Math.random) {
-    if (typeof symmetrical !== "boolean") {
-      throw new Error("The requested symmetry category must be a boolean.");
-    }
-
     const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(false));
+
     for (let row = 0; row < GRID_SIZE; row++) {
-      for (let column = 0; column < GRID_SIZE / 2; column++) {
+      for (let col = 0; col < GRID_SIZE / 2; col++) {
         const filled = random() < 0.5;
-        grid[row][column] = filled;
-        grid[row][GRID_SIZE - 1 - column] = filled;
+        grid[row][col] = filled;
+        grid[row][GRID_SIZE - 1 - col] = filled;
       }
     }
 
     if (!symmetrical) {
       const row = Math.floor(random() * GRID_SIZE);
-      const column = Math.floor(random() * (GRID_SIZE / 2));
-      grid[row][column] = !grid[row][column];
+      const col = Math.floor(random() * (GRID_SIZE / 2));
+      grid[row][col] = !grid[row][col];
     }
 
-    if (isSymmetricalGrid(grid) !== symmetrical) {
-      throw new Error("Generated symmetry grid does not match its requested category.");
-    }
     return grid;
   }
 
+  function isSymmetricalGrid(grid) {
+    return grid.every((row) => row.every((cell, col) => cell === row[GRID_SIZE - 1 - col]));
+  }
+
   function renderSymmetryGrid(grid) {
-    validateSymmetryGrid(grid);
-    const cells = grid.flat().map(filled =>
-      `<span class="symmetry-cell${filled ? " is-filled" : ""}"></span>`
+    const cells = grid.flatMap((row) =>
+      row.map((filled) => `<span class="symmetry-cell${filled ? " is-filled" : ""}"></span>`).join("")
     ).join("");
-    return `<div class="symmetry-grid" role="img" aria-label="Eight by eight square pattern">${cells}</div>`;
+
+    return `<div class="symmetry-grid" role="img" aria-label="Symmetry pattern">${cells}</div>`;
   }
 
   function generateMemorySequence(length, random = Math.random) {
-    if (!Number.isInteger(length) || length < 1 || length > 7) {
-      throw new Error("A memory sequence length must be an integer from 1 to 7.");
-    }
-    return shuffle(Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) => index), random)
-      .slice(0, length);
+    return shuffle(
+      Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) => index),
+      random
+    ).slice(0, length);
   }
 
-  function renderMemorySquare(position) {
-    if (!Number.isInteger(position) || position < 0 || position >= MEMORY_LOCATION_COUNT) {
-      throw new Error("A memory location must be an integer from 0 to 15.");
-    }
+  function renderMemoryGrid(sequence) {
     const cells = Array.from({ length: MEMORY_LOCATION_COUNT }, (_, index) =>
-      `<span class="memory-stimulus-cell${index === position ? " is-highlighted" : ""}"></span>`
+      `<span class="memory-cell${sequence.includes(index) ? " is-highlighted" : ""}"></span>`
     ).join("");
-    return `<div class="memory-stimulus-grid" role="img" aria-label="A square is highlighted in a four by four grid">${cells}</div>`;
+
+    return `<div class="memory-grid" role="img" aria-label="Memory pattern">${cells}</div>`;
   }
 
-  function scoreSquareRecall(presented, selected) {
-    if (!Array.isArray(presented) || presented.length < 1 || presented.length > 7 ||
-        presented.some(location => !Number.isInteger(location) || location < 0 || location >= MEMORY_LOCATION_COUNT) ||
-        new Set(presented).size !== presented.length) {
-      throw new Error("Presented memory locations must be 1 to 7 unique integers from 0 to 15.");
-    }
-    if (!Array.isArray(selected) ||
-        selected.some(location => location !== null &&
-          (!Number.isInteger(location) || location < 0 || location >= MEMORY_LOCATION_COUNT)) ||
-        new Set(selected.filter(location => location !== null)).size !== selected.filter(location => location !== null).length) {
-      throw new Error("Selected memory locations must be unique integers from 0 to 15 or null.");
-    }
+  function showTrial(trialNumber) {
+    const symmetrical = Math.random() > 0.5;
+    const grid = generateSymmetryGrid(symmetrical);
+    const sequenceLength = Math.min(7, Math.max(2, trialNumber + 1));
+    const sequence = generateMemorySequence(sequenceLength);
 
-    const locationCorrect = presented.reduce((count, location) =>
-      count + (selected.includes(location) ? 1 : 0), 0);
-    const positionCorrect = presented.reduce((count, location, index) =>
-      count + (selected[index] === location ? 1 : 0), 0);
+    document.getElementById("symmetry-output").innerHTML = renderSymmetryGrid(grid);
+    document.getElementById("memory-output").innerHTML = renderMemoryGrid(sequence);
 
-    return {
-      locationCorrect,
-      locationAccuracy: locationCorrect / presented.length,
-      positionCorrect,
-      positionAccuracy: positionCorrect / presented.length,
-      exactSequenceAccuracy: Number(
-        selected.length === presented.length && positionCorrect === presented.length
-      )
-    };
+    document.getElementById("trial-label").textContent = `Trial ${trialNumber}`;
+    document.getElementById("category-label").textContent = `Category: ${symmetrical ? "Symmetrical" : "Asymmetrical"}`;
+    document.getElementById("sequence-label").textContent = `Sequence: ${sequenceLength}`;
+
+    const valid = isSymmetricalGrid(grid) === symmetrical;
+    const statusText = valid ? "Stimulus displayed" : "Warning: task mismatch detected";
+    document.getElementById("status").textContent = trialNumber >= 5 ? "Experiment complete" : statusText;
   }
 
-  function generateBalancedAnswers(trialCount, random = Math.random) {
-    if (!Number.isInteger(trialCount) || trialCount < 0 || trialCount % 2 !== 0) {
-      throw new Error("The main symmetry trial count must be an even non-negative integer.");
-    }
-    return shuffle([
-      ...Array(trialCount / 2).fill(true),
-      ...Array(trialCount / 2).fill(false)
-    ], random);
-  }
-
-  function computeSummary(recallTrials, symmetryTrials) {
-    const totalLocationCorrect = recallTrials.reduce((sum, trial) => sum + trial.locationCorrect, 0);
-    const totalRecallPositions = recallTrials.reduce((sum, trial) => sum + trial.positionCorrect, 0);
-    const totalPresentedPositions = recallTrials.reduce((sum, trial) => sum + trial.sequenceLength, 0);
-    const perfectSetScore = recallTrials.reduce((sum, trial) =>
-      sum + (trial.exactSequenceAccuracy ? trial.sequenceLength : 0), 0);
-    const maxSpan = recallTrials.reduce((max, trial) =>
-      trial.exactSequenceAccuracy ? Math.max(max, trial.sequenceLength) : max, 0);
-    const symmetryCorrect = symmetryTrials.filter(trial => trial.accuracy).length;
-
-    return {
-      totalRecallPositions,
-      totalPresentedPositions,
-      recallPositionAccuracy: totalPresentedPositions ? totalRecallPositions / totalPresentedPositions : 0,
-      totalLocationCorrect,
-      recallLocationAccuracy: totalPresentedPositions ? totalLocationCorrect / totalPresentedPositions : 0,
-      perfectSetScore,
-      maxSpan,
-      completedSequences: recallTrials.length,
-      symmetryCorrect,
-      symmetryTrials: symmetryTrials.length,
-      symmetryAccuracy: symmetryTrials.length ? symmetryCorrect / symmetryTrials.length : 0
-    };
-  }
-
-  root.SymmetrySpan = Object.freeze({
+  window.SymmetrySpan = Object.freeze({
     GRID_SIZE,
     MEMORY_GRID_SIZE,
     MEMORY_LOCATION_COUNT,
-    shuffle,
-    validateSymmetryGrid,
-    isSymmetricalGrid,
     generateSymmetryGrid,
+    isSymmetricalGrid,
     renderSymmetryGrid,
     generateMemorySequence,
-    renderMemorySquare,
-    scoreSquareRecall,
-    generateBalancedAnswers,
-    computeSummary
+    renderMemoryGrid,
+    showTrial
   });
 
-  const ui = {
-    symmetryOutput: document.getElementById("symmetry-output"),
-    memoryOutput: document.getElementById("memory-output"),
-    consoleOutput: document.getElementById("console-output")
-  };
-
-  function renderDemo() {
-    const grid = SymmetrySpan.generateSymmetryGrid(true);
-    const memoryPosition = SymmetrySpan.generateMemorySequence(1)[0];
-
-    ui.symmetryOutput.innerHTML = SymmetrySpan.renderSymmetryGrid(grid);
-    ui.memoryOutput.innerHTML = SymmetrySpan.renderMemorySquare(memoryPosition);
-
-    const sample = SymmetrySpan.scoreSquareRecall([memoryPosition], [memoryPosition]);
-    ui.consoleOutput.textContent = JSON.stringify({
-      grid,
-      memoryPosition,
-      sequence: [memoryPosition],
-      score: sample
-    }, null, 2);
-  }
-
-  document.getElementById("generate-symmetry").addEventListener("click", () => {
-    const symmetrical = Math.random() > 0.5;
-    const grid = SymmetrySpan.generateSymmetryGrid(symmetrical);
-    ui.symmetryOutput.innerHTML = SymmetrySpan.renderSymmetryGrid(grid);
-    ui.consoleOutput.textContent = JSON.stringify({
-      symmetrical,
-      grid
-    }, null, 2);
-  });
-
-  document.getElementById("generate-memory").addEventListener("click", () => {
-    const sequence = SymmetrySpan.generateMemorySequence(4);
-    const position = sequence[0];
-    ui.memoryOutput.innerHTML = SymmetrySpan.renderMemorySquare(position);
-    ui.consoleOutput.textContent = JSON.stringify({
-      sequence,
-      highlighted: position
-    }, null, 2);
-  });
-
-  renderDemo();
-})(window);
+  showTrial(1);
+})();
